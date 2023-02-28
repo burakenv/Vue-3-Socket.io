@@ -20,7 +20,7 @@ export default class VueSocketIO {
         Logger.debug = debug;
         this.io = this.connect(connection, options);
         this.emitter = new Emitter(vuex, secret);
-        this.listener = new Listener(this.io, this.emitter, secret);
+        this.listener = new Listener(this.io, this.emitter);
 
     }
 
