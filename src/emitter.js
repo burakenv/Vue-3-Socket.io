@@ -1,3 +1,4 @@
+import CryptoJS from "crypto-js";
 import Logger from "./logger";
 
 export default class EventEmitter {
@@ -65,15 +66,19 @@ export default class EventEmitter {
    */
   emit(event, args) {
     if (this.listeners.has(event)) {
-      if (this.secret) {
-        if (args[0] && args[0].encrypted) {
-          console.log("decrypting", args);
-          args = this.decrypt(args[0].encrypted);
-          console.log("decrypted", args);
+      if (this.secret !== undefined) {
+        if (
+          args !== undefined &&
+          typeof args === "object" &&
+          Object.hasOwn(args, "msg")
+        ) {
+          args = this._decrypt(args.msg);
         }
-      }
 
-      Logger.info(`Broadcasting: #${event}, Data:`, args);
+        Logger.info(`Encrypted Broadcasting: #${event}, Data:`, args);
+      } else {
+        Logger.info(`Broadcasting: #${event}, Data:`, args);
+      }
 
       this.listeners.get(event).forEach((listener) => {
         listener.callback.call(listener.component, args);
@@ -122,11 +127,12 @@ export default class EventEmitter {
 
   _decrypt(encrypted) {
     try {
-      return encrypted.map((item) =>
+      const decrypted = encrypted.map((item) =>
         JSON.parse(
           CryptoJS.AES.decrypt(item, this.secret).toString(CryptoJS.enc.Utf8)
         )
       );
+      return decrypted[0];
     } catch (e) {
       const error = new Error(
         `Couldn't decrypt. Wrong secret used on client or invalid data sent. (${e.message})`
