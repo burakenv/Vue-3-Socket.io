@@ -66,9 +66,11 @@ export default class EventEmitter {
   emit(event, args) {
     if (this.listeners.has(event)) {
       if (this.secret) {
-        console.log("decrypting", args);
-        args = this._decrypt(args);
-        console.log("decrypted", args);
+        if (args[0] && args[0].encrypted) {
+          console.log("decrypting", args);
+          args = this.decrypt(args[0].encrypted);
+          console.log("decrypted", args);
+        }
       }
 
       Logger.info(`Broadcasting: #${event}, Data:`, args);
